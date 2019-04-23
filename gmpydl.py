@@ -198,6 +198,7 @@ def download_song(api, sid, update_dl):
                 return True
     # do the download
     filename, audio = api.download_song(song['id'])
+    filename = "%s/%02d - %s.mp3" % (path, song['track_number'], song['title'])
     filepath = os.path.join(path, filename)
     try:
         with open(filepath, 'wb') as f:
