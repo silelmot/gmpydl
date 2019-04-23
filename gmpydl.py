@@ -12,7 +12,6 @@ import argparse
 import datetime
 import tkinter
 
-
 program_dir = os.path.expanduser("~/.gmpydl")
 dl_store_file = os.path.join(program_dir, ".gmpydl_dl_store")
 dl2_store_file = os.path.join(program_dir, ".gmpydl_dl2_store")
@@ -168,6 +167,7 @@ def fill_all_store(api):
             existsongs += 1
     print("Songs to download: %s" % (len(songs)-existsongs))
 
+
 def get_song_existence(api, sid):
     song = all_store[sid]
     artist, album, alb_artist, title = get_song_data(song)
@@ -178,10 +178,11 @@ def get_song_existence(api, sid):
         path = os.path.expanduser("%s/%s/%s" % (settings['dest'], alb_artist, album))
     else:
         path = os.path.expanduser("%s/%s/%s" % (settings['dest'], artist, album))
-    f = "%s/%02d - %s.mp3" % (path, song['track_number'], song['title'])
+    f = (("%02d - %s.mp3" % (song['track_number'], song['title'])).replace("/","_")).replace("\\","_")
+    f = os.path.join(path, f)
     if os.path.isfile(f):
         return True
-        
+
 def get_song_data(song):
     return song['artist'], song['album'], song['album_artist'], song['title']
 
@@ -218,11 +219,15 @@ def download_song(api, sid, update_dl):
                 return True
     # do the download
     filename, audio = api.download_song(song['id'])
-    filename = "%s/%02d - %s.mp3" % (path, song['track_number'], song['title'])
+    filename = (("%02d - %s.mp3" % (song['track_number'], song['title'])).replace("/","_")).replace("\\","_")
+    #filename = filename.replace("/","_")
+    #filename = filename.replace("\\","_")
+    print(filename)
     filepath = os.path.join(path, filename)
+    print(filepath)
     try:
         with open(filepath, 'wb') as f:
-            f.write(audio)
+             f.write(audio)
         if update_dl:
             dl_store[sid] = all_store[sid]
             dl_store.sync()
@@ -323,9 +328,6 @@ if __name__ == "__main__":
     ADDACCOUNT = args.addaccount
     OTHERACCOUNT = args.otheraccount
     make_prog_dir()
-
-    window = tkinter.Tk()
-       
     if ADDACCOUNT:
         add_account()
         sys.exit()
