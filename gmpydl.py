@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-
+# -*- coding: utf-8 -*-
 # Copyright (c) 2015 Steve Newbury
 
 from gmusicapi import Musicmanager
@@ -11,6 +11,7 @@ import unicodedata
 import argparse
 import datetime
 import tkinter
+import re
 
 program_dir = os.path.expanduser("~/.gmpydl")
 dl_store_file = os.path.join(program_dir, ".gmpydl_dl_store")
@@ -163,10 +164,9 @@ def fill_all_store(api):
         if not all_store.has_key(sid):
             all_store[sid] = s
             count += 1
-        if get_song_existence(api, sid):
+        if get_song_existence(api,sid):
             existsongs += 1
     print("Songs to download: %s" % (len(songs)-existsongs))
-
 
 def get_song_existence(api, sid):
     song = all_store[sid]
@@ -178,10 +178,13 @@ def get_song_existence(api, sid):
         path = os.path.expanduser("%s/%s/%s" % (settings['dest'], alb_artist, album))
     else:
         path = os.path.expanduser("%s/%s/%s" % (settings['dest'], artist, album))
-    f = (("%02d - %s.mp3" % (song['track_number'], song['title'])).replace("/","_")).replace("\\","_")
+    f = "%02d - %s.mp3" % (song['track_number'], song['title'])
+    f = re.sub(r'[\\/*"<>\|%\^]', '_', f)
     f = os.path.join(path, f)
     if os.path.isfile(f):
         return True
+    else:
+        print(f)
 
 def get_song_data(song):
     return song['artist'], song['album'], song['album_artist'], song['title']
@@ -209,7 +212,7 @@ def download_song(api, sid, update_dl):
     else:
         # check if the filename already exists
         # Build filename like "02 - track title.mp3" (like Gmusic passes when we download)
-        f = "%s/%02d - %s.mp3" % (path, song['track_number'], song['title'])
+        f = u'%s/%02d - %s.mp3' % (path, song['track_number'], song['title'])
         if os.path.isfile(f):
             if not OVERWRITE:
                 log("File already exists - marking as downloaded (enable Overwrite to re-download)")
@@ -218,16 +221,14 @@ def download_song(api, sid, update_dl):
                     dl_store.sync()
                 return True
     # do the download
-    filename, audio = api.download_song(song['id'])
-    filename = (("%02d - %s.mp3" % (song['track_number'], song['title'])).replace("/","_")).replace("\\","_")
-    #filename = filename.replace("/","_")
-    #filename = filename.replace("\\","_")
+    ignore, audio = api.download_song(song['id'])
+    filename = u'%02d - %s.mp3' % (song['track_number'], song['title'])
+    filename = re.sub(r'[\\/*"<>\|%\^]', '_', filename)
     print(filename)
-    filepath = os.path.join(path, filename)
-    print(filepath)
+    filepath = u'%s' % os.path.join(path, filename)
     try:
         with open(filepath, 'wb') as f:
-             f.write(audio)
+            f.write(audio)
         if update_dl:
             dl_store[sid] = all_store[sid]
             dl_store.sync()
