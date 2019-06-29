@@ -164,9 +164,10 @@ def fill_all_store(api):
         if not all_store.has_key(sid):
             all_store[sid] = s
             count += 1
-        if get_song_existence(api,sid):
-            existsongs += 1
-    print("Songs to download: %s" % (len(songs)-existsongs))
+        #if
+        get_song_existence(api,sid)#: #check if song is in folder
+        #    existsongs += 1
+    print("Songs to download: %s" % len(missing_song))
 
 def get_song_existence(api, sid):
     song = all_store[sid]
@@ -181,10 +182,10 @@ def get_song_existence(api, sid):
     f = "%02d - %s.mp3" % (song['track_number'], song['title'])
     f = re.sub(r'[\\/*"<>\|%\^]', '_', f)
     f = os.path.join(path, f)
-    if os.path.isfile(f):
-        return True
-    else:
-        print(f)
+    if not os.path.isfile(f):
+        missing_song[sid] = song
+
+        
 
 def get_song_data(song):
     return song['artist'], song['album'], song['album_artist'], song['title']
@@ -253,13 +254,17 @@ def main():
             log("%d new songs" % diff)
             dl_count = 0
             if diff > 0:
+                for s in missing_song:
+                    download_song(api, s, True)
+                    dl_count += 1
+                    if TESTING:
+                        if dl_count == 10:
+                            break
+                        '''
                 for s in all_store:
                     if not dl_store.has_key(s):
-                        download_song(api, s, True)
-                        dl_count += 1
-                        if TESTING:
-                            if dl_count == 10:
-                                break
+                        download_song(api, s, True)'''
+                        
             log("%d new songs downloaded" % dl_count)
         nice_close(api)
     else:
@@ -333,6 +338,7 @@ if __name__ == "__main__":
         add_account()
         sys.exit()
     all_store = {} # open an empty store
+    missing_song = {}
     if SEARCHMODE:
         searchmain()
     else :
