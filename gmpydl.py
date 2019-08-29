@@ -12,6 +12,7 @@ import argparse
 import datetime
 import tkinter
 import re
+import datetime
 
 program_dir = os.path.expanduser("~/.gmpydl")
 dl_store_file = os.path.join(program_dir, ".gmpydl_dl_store")
@@ -225,7 +226,7 @@ def download_song(api, sid, update_dl):
     ignore, audio = api.download_song(song['id'])
     filename = u'%02d - %s.mp3' % (song['track_number'], song['title'])
     filename = re.sub(r'[\\/*"<>\|%\^]', '_', filename)
-    print(filename)
+    #print(filename)
     filepath = u'%s' % os.path.join(path, filename)
     try:
         with open(filepath, 'wb') as f:
@@ -253,10 +254,16 @@ def main():
             diff = len(all_store) - len(dl_store)
             log("%d new songs" % diff)
             dl_count = 0
-            if diff > 0:
+            if len(missing_song) > 0:
+                dl_stime = datetime.datetime.now()
+                print("\n")
                 for s in missing_song:
                     download_song(api, s, True)
                     dl_count += 1
+                    dl_ntime = datetime.datetime.now()
+                    dl_left = dl_ntime - dl_stime
+                    dl_time = (dl_left / dl_count)*(len(missing_song) - dl_count)
+                    progress(dl_count, len(missing_song), status='Time left: %s' % dl_time)
                     if TESTING:
                         if dl_count == 10:
                             break
@@ -270,6 +277,19 @@ def main():
     else:
         log("Failed to initialise GMusic API")
 
+def progress(count, total, status=''):
+    bar_len = 60
+    ERASE_LINE = '\x1b[2K'
+    CURSOR_UP_ONE = '\x1b[1A' 
+    filled_len = int(round(bar_len * count / float(total)))
+
+    percents = round(100.0 * count / float(total), 1)
+    bar = '#' * filled_len + ' ' * (bar_len - filled_len)
+
+    sys.stdout.write(CURSOR_UP_ONE + ERASE_LINE + '%s \n' % status)
+    sys.stdout.write('[%s] %s%s \r' % (bar, percents, '%'))
+    sys.stdout.flush()
+    
 def get_input():
     term = raw_input("Enter your seach term: ")
     ty = int(raw_input("Supported search types: \nArtist - 1\nAlbum - 2\nSong - 3\nEnter type: "))
