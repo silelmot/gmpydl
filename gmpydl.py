@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015 Steve Newbury
+4# Copyright (c) 2015 Steve Newbury
 
 from gmusicapi import Musicmanager
 from getpass import getpass
@@ -10,8 +10,6 @@ import shelve
 import unicodedata
 import argparse
 import datetime
-import tkinter
-import re
 import datetime
 
 program_dir = os.path.expanduser("~/.gmpydl")
@@ -158,17 +156,18 @@ def fill_all_store(api):
         out = 'Loding library...%d' % len(songs)
         sys.stdout.write("\r\x1b[K"+out.__str__())
         sys.stdout.flush()
-    print("\r\n")
+    print(" ")
     for s in songs:
         # id comes back in unicode so have to make it dictionary friendly string
         sid = unicodedata.normalize('NFKD', s['id']).encode('ascii', 'ignore')
         if not all_store.has_key(sid):
             all_store[sid] = s
             count += 1
-        #if
         get_song_existence(api,sid)#: #check if song is in folder
-        #    existsongs += 1
-    print("Songs to download: %s" % len(missing_song))
+        out = 'Songs to download...%d' % len(missing_song)
+        sys.stdout.write("\r\x1b[K"+out.__str__())
+        sys.stdout.flush()
+    print("\r\n")
 
 def get_song_existence(api, sid):
     song = all_store[sid]
@@ -180,13 +179,10 @@ def get_song_existence(api, sid):
         path = os.path.expanduser("%s/%s/%s" % (settings['dest'], alb_artist, album))
     else:
         path = os.path.expanduser("%s/%s/%s" % (settings['dest'], artist, album))
-    f = "%02d - %s.mp3" % (song['track_number'], song['title'])
-    f = re.sub(r'[\\/*"<>\|%\^]', '_', f)
+    f = u'%s/%02d - %s.mp3' % (path, song['track_number'], song['title'])
     f = os.path.join(path, f)
     if not os.path.isfile(f):
         missing_song[sid] = song
-
-        
 
 def get_song_data(song):
     return song['artist'], song['album'], song['album_artist'], song['title']
@@ -224,9 +220,7 @@ def download_song(api, sid, update_dl):
                 return True
     # do the download
     ignore, audio = api.download_song(song['id'])
-    filename = u'%02d - %s.mp3' % (song['track_number'], song['title'])
-    filename = re.sub(r'[\\/*"<>\|%\^]', '_', filename)
-    #print(filename)
+    filename = u'%s/%02d - %s.mp3' % (path, song['track_number'], song['title'])
     filepath = u'%s' % os.path.join(path, filename)
     try:
         with open(filepath, 'wb') as f:
@@ -254,7 +248,7 @@ def main():
             diff = len(all_store) - len(dl_store)
             log("%d new songs" % diff)
             dl_count = 0
-            if len(missing_song) > 0:
+            if len(missing_song) > 0: #if diff > 0:
                 dl_stime = datetime.datetime.now()
                 print("\n")
                 for s in missing_song:
@@ -270,8 +264,11 @@ def main():
                         '''
                 for s in all_store:
                     if not dl_store.has_key(s):
-                        download_song(api, s, True)'''
-                        
+                        download_song(api, s, True)
+                        dl_count += 1
+                        if TESTING:
+                            if dl_count == 10:
+                                break'''
             log("%d new songs downloaded" % dl_count)
         nice_close(api)
     else:
@@ -286,10 +283,10 @@ def progress(count, total, status=''):
     percents = round(100.0 * count / float(total), 1)
     bar = '#' * filled_len + ' ' * (bar_len - filled_len)
 
-    sys.stdout.write(CURSOR_UP_ONE + ERASE_LINE + '%s \n' % status)
+    sys.stdout.write(CURSOR_UP_ONE + ERASE_LINE + 'Songs to download: %s %s \n' % (total - count,status))
     sys.stdout.write('[%s] %s%s \r' % (bar, percents, '%'))
     sys.stdout.flush()
-    
+
 def get_input():
     term = raw_input("Enter your seach term: ")
     ty = int(raw_input("Supported search types: \nArtist - 1\nAlbum - 2\nSong - 3\nEnter type: "))
