@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-4# Copyright (c) 2015 Steve Newbury
+# Copyright (c) 2015 Steve Newbury
 
 from gmusicapi import Musicmanager
 from getpass import getpass
@@ -257,6 +257,7 @@ def main():
                     dl_ntime = datetime.datetime.now()
                     dl_left = dl_ntime - dl_stime
                     dl_time = (dl_left / dl_count)*(len(missing_song) - dl_count)
+                    dl_time = str(dl_time).split(".")[0]
                     progress(dl_count, len(missing_song), status='Time left: %s' % dl_time)
                     if TESTING:
                         if dl_count == 10:
@@ -283,7 +284,8 @@ def progress(count, total, status=''):
     percents = round(100.0 * count / float(total), 1)
     bar = '#' * filled_len + ' ' * (bar_len - filled_len)
 
-    sys.stdout.write(CURSOR_UP_ONE + ERASE_LINE + 'Songs to download: %s %s \n' % (total - count,status))
+    sys.stdout.write(CURSOR_UP_ONE + ERASE_LINE +CURSOR_UP_ONE + ERASE_LINE + 'Songs left: %s \n' % (total - count))
+    sys.stdout.write('%s \n' % status)
     sys.stdout.write('[%s] %s%s \r' % (bar, percents, '%'))
     sys.stdout.flush()
 
