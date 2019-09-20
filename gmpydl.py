@@ -179,7 +179,8 @@ def get_song_existence(api, sid):
         path = os.path.expanduser("%s/%s/%s" % (settings['dest'], alb_artist, album))
     else:
         path = os.path.expanduser("%s/%s/%s" % (settings['dest'], artist, album))
-    f = u'%s/%02d - %s.mp3' % (path, song['track_number'], song['title'])
+    newtitle = song['title'].replace("/","|")
+    f = u'%s/%02d - %s.mp3' % (path, song['track_number'], newtitle) #song['title'])
     f = os.path.join(path, f)
     if not os.path.isfile(f):
         missing_song[sid] = song
@@ -190,6 +191,7 @@ def get_song_data(song):
 def download_song(api, sid, update_dl):
     song = all_store[sid]
     artist, album, alb_artist, title = get_song_data(song)
+    print ("%s:%s" % (artist,title))
     if alb_artist and alb_artist != artist:
         alb_artist_short = alb_artist.split(';')
         if len(alb_artist_short) > 0:
@@ -210,7 +212,9 @@ def download_song(api, sid, update_dl):
     else:
         # check if the filename already exists
         # Build filename like "02 - track title.mp3" (like Gmusic passes when we download)
-        f = u'%s/%02d - %s.mp3' % (path, song['track_number'], song['title'])
+        newtitle = song['title'].replace("/","|")
+        f = u'%s/%02d - %s.mp3' % (path, song['track_number'], newtitle) #song['title'])
+        #f = u'%s/%02d - %s.mp3' % (path, song['track_number'], song['title'])
         if os.path.isfile(f):
             if not OVERWRITE:
                 log("File already exists - marking as downloaded (enable Overwrite to re-download)")
@@ -220,7 +224,9 @@ def download_song(api, sid, update_dl):
                 return True
     # do the download
     ignore, audio = api.download_song(song['id'])
-    filename = u'%s/%02d - %s.mp3' % (path, song['track_number'], song['title'])
+    newtitle = song['title'].replace("/","|")
+    filename = u'%s/%02d - %s.mp3' % (path, song['track_number'], newtitle) #song['title'])
+#    filename = u'%s/%02d - %s.mp3' % (path, song['track_number'], song['title'])
     filepath = u'%s' % os.path.join(path, filename)
     try:
         with open(filepath, 'wb') as f:
