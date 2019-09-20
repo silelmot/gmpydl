@@ -191,7 +191,6 @@ def get_song_data(song):
 def download_song(api, sid, update_dl):
     song = all_store[sid]
     artist, album, alb_artist, title = get_song_data(song)
-    print ("%s:%s" % (artist,title))
     if alb_artist and alb_artist != artist:
         alb_artist_short = alb_artist.split(';')
         if len(alb_artist_short) > 0:
